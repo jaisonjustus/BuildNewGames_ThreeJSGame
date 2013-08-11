@@ -14,62 +14,66 @@ var Ambience = {
 	_context : null,
 
 	_audioSources : {
-		bgsound : {
-			source : 'bgsound',
-			pos : null,
-			gain : 3,
-			loop : true,
-			format : 'mp3'
-		},
 		hit : {
 			source : 'hit',
 			pos : { x : 0, y : 0, z : 0 },
-			gain : 5,
+			gain : 3,
 			loop : false,
 			format : 'mp3'
 		}
 	},
 
+	_buffer : {},
+
 	_sounds : {},
 
 	init : function()	{
 		this._context = new AudioContext();
-		this._createSoundNodes();
+		this._getSounds();
 	},
 
-	_createSoundNodes : function()	{
+	_createSoundNode : function(identifier)	{
+
+		var tempSource = {},
+				pos = this._audioSources[identifier].pos;
+
+		tempSource.source = this._context.createBufferSource();
+		tempSource.volume = this._context.createGain();
+		tempSource.panner = this._context.createPanner();
+
+		tempSource.volume.gain.value = this._audioSources[identifier].gain;
+		tempSource.source.buffer = this._context.createBuffer(this._buffer[identifier], false);
+		tempSource.source.connect(tempSource.volume);
+		tempSource.volume.connect(tempSource.panner);
+		tempSource.panner.connect(this._context.destination);
+		tempSource.source.loop = (this._audioSources[identifier].loop) ? true : false;
+		
+		this._sounds[identifier] = tempSource;
+	},
+
+	_addToBuffer : function()	{
+		console.log('add to buffer');
+		var that = this.context,
+				identifier = this.identifier,
+				response = this.response;
+
+		that._buffer[identifier] = response;
+		console.log(that);
+		console.log(identifier, that._buffer);
+	},
+
+	_getSounds :function()	{
 		for(var source in this._audioSources)	{
-			var tempSource = {},
-					pos = this._audioSources[source].pos;
-
-			tempSource.source = this._context.createBufferSource();
-			tempSource.volume = this._context.createGain();
-			tempSource.panner = this._context.createPanner();
-
-			tempSource.volume.gain.value = this._audioSources[source].gain;
-			tempSource.source.connect(tempSource.volume);
-			tempSource.volume.connect(tempSource.panner);
-			tempSource.panner.connect(this._context.destination);
-			tempSource.source.loop = (this._audioSources[source].loop) ? true : false;
-			
-			this._sounds[source] = tempSource;
-			if(pos)	{
-				this.setAmbienceSounds(this._audioSources[source].source, pos.x, pos.y, pos.z);
-			}
-			this._getSound(this._audioSources[source].source, this._audioSources[source].format, this._attachSound, this);
+			this.fetch(
+				this._audioSources[source].source, 
+				this._audioSources[source].format,
+				this._addToBuffer,
+				this
+			);
 		}
 	},
 
-	_attachSound : function()	{
-		var that = this.context,
-				sound = that._sounds[this.identifier],
-				response = this.response;
-
-		sound.source.buffer = that._context.createBuffer(response, false);
-	  // sound.source.start(that._context.currentTime);
-	},
-
-	_getSound : function(source, format, callback, context)	{
+	fetch : function(source, format, callback, context)	{
 
 		var url = 'sounds/' + source + '.' + format,
 				XHR = null;
@@ -83,12 +87,13 @@ var Ambience = {
 		XHR.send();
 	},
 
-	play : function(identifier)	{
+	playAt : function(identifier, x, y, z)	{
+		this._createSoundNode(identifier);
+		this._position(identifier, x, y, z);
 		this._sounds[identifier].source.start(this._context.currentTime);
-		console.log();
 	},
 
-	setAmbienceSounds : function(identifier, x, y, z)	{
+	_position : function(identifier, x, y, z)	{
 		this._sounds[identifier].x = x;
 		this._sounds[identifier].y = y;
 		this._sounds[identifier].z = z;

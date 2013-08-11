@@ -377,17 +377,16 @@ function ballPhysics()
 	if (ball.position.y <= -fieldHeight/2)
 	{
 		ballDirY = -ballDirY;
-		Ambience.setAmbienceSounds('hit', ball.position.x, ball.position.y, 0);
-		Ambience.play('hit');
-		console.log('hit on wall B');
+		Ambience.playAt('hit', ball.position.x, ball.position.y, 0);
+		// console.log(Ambience, 'hit on wall B');
 	}	
 	// if ball goes off the bottom side (side of table)
 	if (ball.position.y >= fieldHeight/2)
 	{
 		ballDirY = -ballDirY;
-		Ambience.setAmbienceSounds('hit', ball.position.x, ball.position.y, 0);
-		Ambience.play('hit');
-		console.log('hit on wall A');
+		// Ambience.position('hit', ball.position.x, ball.position.y, 0);
+		Ambience.playAt('hit', ball.position.x, ball.position.y, 0);
+		// console.log(Ambience, 'hit on wall A');
 	}
 	
 	// update ball position over time
